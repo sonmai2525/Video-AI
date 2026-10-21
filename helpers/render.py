@@ -206,6 +206,19 @@ def build_master_ass_v4(edl: dict, edit_dir: Path, out_path: Path, preset_name: 
     for card in edl.get("v15_text_cards") or []:
         a=float(card.get("start",0)); b=max(a+.2,float(card.get("end",a+.8))); text=str(card.get("text","")).strip()
         if text: entries.append((a,b,text,[max(.08,(b-a)/max(1,len(text.split())))]*max(1,len(text.split()))))
+    voice_cues=edl.get('v19_voice_caption_events') or []
+    if voice_cues:
+        # Narration captions supersede old source-transcript cards; never double-overlay.
+        entries=[]
+    for e in voice_cues:
+        a=float(e['start']);b=float(e['end']);t=str(e['text']).strip()
+        if t and b>a:
+            words=t.split(); n=len(words)
+            # Compact 3–4 word subtitles with progressive highlighting and pop animation.
+            chunk_size=4
+            for j in range(0,n,chunk_size):
+                part=words[j:j+chunk_size];ca=a+(b-a)*j/n;cb=a+(b-a)*min(n,j+len(part))/n
+                entries.append((ca,cb,' '.join(part).upper(),[(cb-ca)/len(part)]*len(part)))
     entries.sort(key=lambda x:x[0])
     header=("[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\nWrapStyle: 2\n\n"
             "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\n")
@@ -217,6 +230,8 @@ def build_master_ass_v4(edl: dict, edit_dir: Path, out_path: Path, preset_name: 
         ev=_visual_event(edl,a,b)
         style=ev.get("style") if ev.get("style") in CAPTION_PRESETS else ((_event_override(edl,a,b) or _semantic_role(text,idx,len(entries))) if auto else preset_name)
         if style not in CAPTION_PRESETS: style="viral_pop"
+        if edl.get('v19_voice_caption_events'):
+            style='viral_pop'
         p=CAPTION_PRESETS[style]
         text=_v4_decorate(text,ev)
         body=_karaoke_body(text,durations,p["secondary"]) if p["karaoke"] else _ass_escape(text)

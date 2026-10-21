@@ -27,6 +27,8 @@ def main():
     for i,src in enumerate(inputs,1):
         out=unique_output(outdir,src); print(f'\n[{i}/{len(inputs)}] EDIT: {src.name}\nOUTPUT: {out.name}\nMODE: {mode}')
         cmd=[sys.executable,str(ROOT/'helpers'/'auto_viral_editor.py'),str(src),'-o',str(out),'--mode',mode,'--aspect',cfg['aspect'],'--target',cfg['target'],'--caption-style',cfg['caption']]
+        script=ROOT/'VOICE_SCRIPT.txt'
+        if script.exists() and script.read_text(encoding='utf-8-sig').strip(): cmd += ['--voice-script',str(script)]
         if cfg['watermark']: cmd += ['--watermark-box',cfg['watermark']]
         if cfg['preview']: cmd.append('--preview')
         if not cfg['auto_repair']: cmd.append('--no-auto-repair')

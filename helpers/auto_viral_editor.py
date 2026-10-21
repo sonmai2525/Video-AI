@@ -21,6 +21,8 @@ def main():
     ap.add_argument('--target',type=float,default=20); ap.add_argument('--aspect',choices=['9:16','16:9','1:1','source'],default='9:16')
     ap.add_argument('--mode',choices=['turbo','fast','smart','max','fast-quality','full-ai'],default='smart')
     ap.add_argument('--no-cache',action='store_true',help='Force fresh analysis'); ap.add_argument('--cache-dir',type=Path,help='Analysis cache directory'); ap.add_argument('--workdir',type=Path); ap.add_argument('--caption-style',default='visual_dynamic'); ap.add_argument('--preview',action='store_true'); ap.add_argument('--no-subtitles',action='store_true'); ap.add_argument('--no-auto-repair',action='store_true')
+    ap.add_argument('--voice-script',type=Path,help='Vietnamese narration text, one line per scene; UTF-8')
+    ap.add_argument('--allow-no-voice',action='store_true',help='Allow export without narration explicitly')
     ap.add_argument('--watermark-box',help='optional x,y,w,h pixels; edge marks are cropped cleanly, never blurred'); ap.add_argument('--max-watermark-crop',type=float,default=.12)
     a=ap.parse_args(); started=time.time();
     if a.mode=='fast-quality': a.mode='fast'
@@ -68,6 +70,12 @@ def main():
         # Kept out of the hot path; voice renderer uses voice_plan_v15.
     creative15=work/'creative.v15.json'
     if a.mode!='turbo':run([sys.executable,root/'creative_director_v15.py',edl,'-o',creative15,'--target',a.target,'--apply'])
+    # V19: narration must be deliberate and its subtitles must be rendered with the picture.
+    from narration_v19 import ensure_narration_plan
+    narration_report=ensure_narration_plan(edl, script_path=a.voice_script)
+    print('NARRATION V19:', narration_report)
+    if narration_report['events']==0 and not a.allow_no_voice:
+        raise RuntimeError('No narration script generated. Provide --voice-script SCRIPT.txt or explicitly --allow-no-voice.')
     cmd=[sys.executable,root/'render.py',edl,'-o',first]
     if a.preview: cmd.append('--preview')
     if a.no_subtitles: cmd.append('--no-subtitles')
@@ -90,18 +98,27 @@ def main():
     output.parent.mkdir(parents=True,exist_ok=True)
     verify_mp4(final_src)
     narrated=work/'narrated_verified.mp4'
-    try:
-        run([sys.executable,root/'voice_renderer_v16.py',final_src,chosen_edl,'-o',narrated,'--workdir',work/'voice_v16'])
-        verify_mp4(narrated)
-        info=publish_mp4(narrated,output)
-        voice_status='mixed_or_no_events'
-    except (Exception) as e:
-        print('WARNING: narration failed; using verified video without TTS:',e)
+    from voice_renderer_v16 import mix
+    voice_result={'status':'disabled','lines':0}
+    if narration_report['events']:
+        try:
+            voice_result=mix(final_src,chosen_edl,narrated,work/'voice_v16')
+            if voice_result.get('status')!='mixed' or not voice_result.get('lines'):
+                raise RuntimeError('Voice renderer returned zero synthesized lines')
+            verify_mp4(narrated)
+            info=publish_mp4(narrated,output)
+        except Exception as e:
+            if not a.allow_no_voice:
+                raise RuntimeError('AI voice failed: video NOT published. Check Internet, edge-tts and voice plan.') from e
+            print('WARNING: narration failed and --allow-no-voice was set:',e)
+            info=publish_mp4(final_src,output)
+            voice_result={'status':'explicit_fallback_no_tts','lines':0,'error':str(e)}
+    else:
         info=publish_mp4(final_src,output)
-        voice_status='fallback_no_tts'
+    voice_status=voice_result['status']
     verification_path=work/'export.verified.json'
     verification_path.write_text(json.dumps(info,ensure_ascii=False,indent=2),encoding='utf-8')
     print(f'EXPORT VERIFIED: {output} | {info["duration_seconds"]}s | {info["width"]}x{info["height"]}')
-    manifest={'version':'18.0','analysis_cache_hit':cache_hit,'mode':a.mode,'input':str(original),'effective_source':str(video),'output':str(output),'workdir':str(work),'target_seconds':a.target,'aspect':a.aspect,'selected_pass':final_src.name,'selected_edl':str(chosen_edl),'elapsed_seconds':round(time.time()-started,2),'watermark':wm_report,'viral_plan':str(viral12),'story_plan_v13':str(story13) if story13 else None,'finish_plan_v131':str(finish131) if finish131 else None,'creative_plan_v14':str(creative14) if creative14 else None,'voice_plan_v14':None,'creative_plan_v15':str(creative15),'voice_v16_status':voice_status,'export_validation':str(verification_path),'upload':'not_attempted_local_only'}
+    manifest={'version':'18.0','analysis_cache_hit':cache_hit,'mode':a.mode,'input':str(original),'effective_source':str(video),'output':str(output),'workdir':str(work),'target_seconds':a.target,'aspect':a.aspect,'selected_pass':final_src.name,'selected_edl':str(chosen_edl),'elapsed_seconds':round(time.time()-started,2),'watermark':wm_report,'viral_plan':str(viral12),'story_plan_v13':str(story13) if story13 else None,'finish_plan_v131':str(finish131) if finish131 else None,'creative_plan_v14':str(creative14) if creative14 else None,'voice_plan_v14':None,'creative_plan_v15':str(creative15),'voice_v16_status':voice_status,'voice_v19_lines':voice_result.get('lines',0),'export_validation':str(verification_path),'upload':'not_attempted_local_only'}
     (work/'v17.manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)); print(f'\ndone V17 {a.mode} → {output} | {manifest["elapsed_seconds"]}s')
 if __name__=='__main__': main()
