@@ -1,0 +1,21 @@
+VIDEO AI EDITOR V12 - VIRAL ENGINE
+
+CACH DUNG DON GIAN:
+1. Cho video vao thu muc INPUT.
+2. Bam EDIT_VIDEO.bat de dung SMART (khuyen dung).
+3. Video xuat hien trong OUTPUT.
+
+CHE DO:
+- EDIT_FAST.bat: nhanh nhat.
+- EDIT_VIDEO.bat: SMART - can bang chat luong/toc do, nen dung hang ngay.
+- EDIT_MAX_AI.bat: phan tich sau nhat, cham hon.
+
+V12 MOI:
+- Viral Candidate Generator: tao 3 phuong an tren EDL va chi render ban co diem cao nhat.
+- Hook scoring: uu tien khoanh khac manh cho cold-open.
+- Retention pacing + pattern interrupt co gioi han.
+- SMART bo qua storyboard V10 nang de tiet kiem thoi gian; MAX moi chay day du.
+- Quality Gate chi render sua lan 2 neu diem QC chua dat.
+- Xu ly watermark van bao thu, tranh blur/inpaint pha nen.
+
+Luu y: he thong toi uu kha nang giu nguoi xem, khong the dam bao so view.

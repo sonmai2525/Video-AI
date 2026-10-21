@@ -1,0 +1,10 @@
+V14 - cach dung nhanh
+1. Cho video vao INPUT.
+2. Chay EDIT_VIDEO.bat (SMART mac dinh).
+3. Video xuat hien trong OUTPUT.
+4. V14 tao them voice.v14.json + voice.v14.srt trong thu muc work cua tung video.
+
+Luu y ve giong doc:
+- V14 da co AI Voice Director de quyet dinh NOI GI, NOI LUC NAO va duck nhac bao nhieu.
+- Ban V14 nay khong gia vo co TTS: neu may/repo chua cau hinh engine TTS, file MP4 se CHUA tu sinh giong doc.
+- voice.v14.json/SRT la dau vao san sang cho engine TTS local/cloud o buoc tiep theo.

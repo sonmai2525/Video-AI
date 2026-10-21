@@ -1,0 +1,9 @@
+VIDEO AI EDITOR V16 - TOI UU TOC DO
+
+1. Chay EDIT_TURBO.bat de edit nhanh nhat (rut gon cac lop phan tich V13/V13.1/V14).
+2. Chay EDIT_FAST.bat neu muon giu phan tich canh va am thanh day du.
+3. Chay EDIT_VIDEO.bat (Smart) de giu quy trinh V16 chi tiet.
+4. Chay EDIT_MAX_AI.bat neu can phan tich sau.
+5. Che do Turbo quet canh 10 fps, 480p va bo phan tich beat; co the bo sot mot so cut ngan.
+6. Neu nhac nen, voice TTS hoac render bi cham, thoi gian con phu thuoc file dau vao / CPU GPU / ket noi mang.
+7. Ban nang cap da qua 59 unit tests, 15 subtests va 1 smoke test video 4 giay.

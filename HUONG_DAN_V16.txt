@@ -1,0 +1,16 @@
+VIDEO AI EDITOR V16 - HUONG DAN NHANH (WINDOWS)
+
+1. Cai Python 3.10+ va FFmpeg (bao gom ffprobe), cho vao PATH.
+2. Chay SETUP_ONCE.bat lan dau de cai thu vien.
+3. Cho video vao thu muc INPUT hoac keo video vao EDIT_VIDEO.bat.
+4. Chay EDIT_VIDEO.bat (SMART), EDIT_FAST.bat (nhanh), EDIT_MAX_AI.bat (nang cao).
+5. Lay ket qua MP4 trong thu muc OUTPUT. Ban phan tich / QC nam trong OUTPUT/<ten_video>_EDIT_v16.
+6. Chinh V16_CONFIG.ini: aspect=9:16 | 16:9 | 1:1 | source, target_seconds=20,
+   caption_style=visual_dynamic, watermark_box= (de trong neu khong can).
+
+LUU Y:
+- Voice V16 su dung edge-tts, can Internet de tao giong noi. Neu dich vu khong kha dung,
+  he thong giu nguyen video da dung va bo qua long giong (ghi trang thai trong manifest).
+- He thong tu tao giay phep noi dung KHONG CO; chi su dung video/am thanh ban co quyen dung.
+- 'Viral' chi la muc tieu phong cach bien tap; khong bao dam luot xem.
+- Neu muon giu tron video goc, sao luu truoc khi edit; OUTPUT tao file moi.

@@ -1,0 +1,20 @@
+V10.2 ONE-CLICK
+===============
+LAN DAU: double-click SETUP_ONCE.bat (chi 1 lan).
+
+MOI VIDEO SAU NAY - KHONG CAN GO CODE:
+A) Keo MP4/MOV tha truc tiep len EDIT_VIDEO.bat.
+B) Nhieu video: copy vao INPUT, double-click EDIT_VIDEO.bat.
+
+Ket qua nam trong OUTPUT, ten dang TenGoc_EDIT.mp4.
+EDIT_VIDEO.bat = Fast Quality (khuyen dung: nhanh + dep).
+EDIT_FULL_AI.bat = Full AI (video kho, cham hon).
+
+Tuy chinh V10.2_CONFIG.ini:
+- target_seconds = 20
+- aspect = 9:16
+- auto_repair = true: chi render lai khi QC kem
+- watermark_box = x,y,w,h: chi dung watermark co dinh sat mep
+
+V10.2 khong blur/delogo tao mang bet. Watermark giua khung hinh nen xu ly rieng
+bang reconstruction/inpainting, khong ep blur tu dong.
