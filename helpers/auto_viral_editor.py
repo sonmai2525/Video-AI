@@ -10,6 +10,7 @@ from pathlib import Path
 from viral_qc import evaluate,repair
 from watermark_cleanup import clean as clean_watermark, parse_box
 from analysis_cache_v17 import analyze_cached
+from smart_export_v18 import verify_mp4, publish_mp4, ExportError
 
 def run(cmd):
     print('>',' '.join(map(str,cmd))); subprocess.run(list(map(str,cmd)),check=True)
@@ -85,12 +86,22 @@ def main():
         else: cmd += ['--build-subtitles','--caption-style',a.caption_style]
         run(cmd); rep2=evaluate(second,json.loads(repaired.read_text())); (work/'qc.second.json').write_text(json.dumps(rep2,ensure_ascii=False,indent=2)); final_src=second if rep2['score']>=rep['score'] else first
         if final_src==second: chosen_edl=repaired
+    # Publish only fully verified files. Never depend on third-party upload services.
     output.parent.mkdir(parents=True,exist_ok=True)
+    verify_mp4(final_src)
+    narrated=work/'narrated_verified.mp4'
     try:
-        run([sys.executable,root/'voice_renderer_v16.py',final_src,chosen_edl,'-o',output,'--workdir',work/'voice_v16'])
+        run([sys.executable,root/'voice_renderer_v16.py',final_src,chosen_edl,'-o',narrated,'--workdir',work/'voice_v16'])
+        verify_mp4(narrated)
+        info=publish_mp4(narrated,output)
         voice_status='mixed_or_no_events'
-    except Exception as e:
-        print('WARNING: V15 TTS unavailable:',e); shutil.copy2(final_src,output); voice_status='fallback_no_tts'
-    manifest={'version':'17.0','analysis_cache_hit':cache_hit,'mode':a.mode,'input':str(original),'effective_source':str(video),'output':str(output),'workdir':str(work),'target_seconds':a.target,'aspect':a.aspect,'selected_pass':final_src.name,'selected_edl':str(chosen_edl),'elapsed_seconds':round(time.time()-started,2),'watermark':wm_report,'viral_plan':str(viral12),'story_plan_v13':str(story13) if story13 else None,'finish_plan_v131':str(finish131) if finish131 else None,'creative_plan_v14':str(creative14) if creative14 else None,'voice_plan_v14':None,'creative_plan_v15':str(creative15),'voice_v16_status':voice_status}
+    except (Exception) as e:
+        print('WARNING: narration failed; using verified video without TTS:',e)
+        info=publish_mp4(final_src,output)
+        voice_status='fallback_no_tts'
+    verification_path=work/'export.verified.json'
+    verification_path.write_text(json.dumps(info,ensure_ascii=False,indent=2),encoding='utf-8')
+    print(f'EXPORT VERIFIED: {output} | {info["duration_seconds"]}s | {info["width"]}x{info["height"]}')
+    manifest={'version':'18.0','analysis_cache_hit':cache_hit,'mode':a.mode,'input':str(original),'effective_source':str(video),'output':str(output),'workdir':str(work),'target_seconds':a.target,'aspect':a.aspect,'selected_pass':final_src.name,'selected_edl':str(chosen_edl),'elapsed_seconds':round(time.time()-started,2),'watermark':wm_report,'viral_plan':str(viral12),'story_plan_v13':str(story13) if story13 else None,'finish_plan_v131':str(finish131) if finish131 else None,'creative_plan_v14':str(creative14) if creative14 else None,'voice_plan_v14':None,'creative_plan_v15':str(creative15),'voice_v16_status':voice_status,'export_validation':str(verification_path),'upload':'not_attempted_local_only'}
     (work/'v17.manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)); print(f'\ndone V17 {a.mode} → {output} | {manifest["elapsed_seconds"]}s')
 if __name__=='__main__': main()
