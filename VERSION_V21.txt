@@ -1,0 +1,2 @@
+VIDEO_AI_EDITOR_V21_CHATGPT_EDITION
+Purpose: ChatGPT execution, runtime voice availability checks, no silent success, animated captions, explicit logo boxes, direct MP4 file output.

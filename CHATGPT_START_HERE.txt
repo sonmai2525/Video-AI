@@ -1,0 +1,2 @@
+Upload this ZIP and an MP4 to ChatGPT, then ask:
+"Extract VIDEO AI EDITOR V21, read V21_CHATGPT_README.md, inspect my video, propose an accurate Vietnamese VOICE_SCRIPT.txt and use helpers/chatgpt_export_v21.py. First check whether AI TTS can actually work in this session. If it cannot, ask me for narration audio; never output a supposed AI-voiced file with no voice. Show a preview before finalizing captions and logo boxes. Attach the generated MP4 directly, not via tmpfiles.org."
