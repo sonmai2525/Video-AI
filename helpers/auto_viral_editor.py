@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse,json,shutil,subprocess,sys,time
 from pathlib import Path
 from viral_qc import evaluate,repair
-from watermark_cleanup import clean as clean_watermark, parse_box
+from watermark_cleanup import clean as clean_watermark, parse_box, clean_boxes
 from analysis_cache_v17 import analyze_cached
 from smart_export_v18 import verify_mp4, publish_mp4, ExportError
 
@@ -23,13 +23,19 @@ def main():
     ap.add_argument('--no-cache',action='store_true',help='Force fresh analysis'); ap.add_argument('--cache-dir',type=Path,help='Analysis cache directory'); ap.add_argument('--workdir',type=Path); ap.add_argument('--caption-style',default='visual_dynamic'); ap.add_argument('--preview',action='store_true'); ap.add_argument('--no-subtitles',action='store_true'); ap.add_argument('--no-auto-repair',action='store_true')
     ap.add_argument('--voice-script',type=Path,help='Vietnamese narration text, one line per scene; UTF-8')
     ap.add_argument('--allow-no-voice',action='store_true',help='Allow export without narration explicitly')
+    ap.add_argument('--watermark-boxes',help='semicolon-separated x,y,w,h boxes in source pixels; e.g. 420,10,290,65;240,1060,300,90')
     ap.add_argument('--watermark-box',help='optional x,y,w,h pixels; edge marks are cropped cleanly, never blurred'); ap.add_argument('--max-watermark-crop',type=float,default=.12)
     a=ap.parse_args(); started=time.time();
     if a.mode=='fast-quality': a.mode='fast'
     if a.mode=='full-ai': a.mode='max'
     original=a.video.resolve(); output=a.output.resolve(); root=Path(__file__).resolve().parent; work=(a.workdir or output.parent/(output.stem+'_v17')).resolve(); work.mkdir(parents=True,exist_ok=True)
     video=original; wm_report=None
-    if a.watermark_box:
+    if a.watermark_boxes:
+        boxes=[parse_box(b) for b in a.watermark_boxes.split(';') if b.strip()]
+        cleaned=work/'source.clean.mp4'; wm_report=clean_boxes(original,cleaned,boxes)
+        (work/'watermark.json').write_text(json.dumps(wm_report,ensure_ascii=False,indent=2))
+        video=cleaned
+    elif a.watermark_box:
         cleaned=work/'source.clean.mp4'; wm_report=clean_watermark(original,cleaned,parse_box(a.watermark_box),'auto',a.max_watermark_crop); (work/'watermark.json').write_text(json.dumps(wm_report,ensure_ascii=False,indent=2)); video=cleaned if wm_report.get('applied') else original
         print('watermark:',wm_report.get('method'),wm_report.get('reason',''))
     analysis=work/'analysis.json'; edl=work/'edl.json'; first=work/'first_pass.mp4'; qc1=work/'qc.first.json'

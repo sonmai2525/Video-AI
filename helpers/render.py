@@ -150,7 +150,7 @@ def _karaoke_body(text: str, durations: list[float], active_colour="&H0000D7FF")
 V4_LAYOUTS = {
     "center": (540, 960),
     "upper": (540, 560),
-    "lower_safe": (540, 1320),
+    "lower_safe": (540, 1450),
     "left": (300, 900),
     "right": (780, 900),
     "top_left": (300, 500),
@@ -232,6 +232,7 @@ def build_master_ass_v4(edl: dict, edit_dir: Path, out_path: Path, preset_name: 
         if style not in CAPTION_PRESETS: style="viral_pop"
         if edl.get('v19_voice_caption_events'):
             style='viral_pop'
+            ev={'layout':'lower_safe','motion':'pop'}
         p=CAPTION_PRESETS[style]
         text=_v4_decorate(text,ev)
         body=_karaoke_body(text,durations,p["secondary"]) if p["karaoke"] else _ass_escape(text)

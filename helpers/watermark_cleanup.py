@@ -51,3 +51,24 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument('video',type=Path); ap.add_argument('-o','--output',type=Path,required=True); ap.add_argument('--box',required=True,help='x,y,w,h pixels'); ap.add_argument('--mode',choices=['auto','crop'],default='auto'); ap.add_argument('--max-crop',type=float,default=.12); ap.add_argument('--report',type=Path)
     a=ap.parse_args(); a.output.parent.mkdir(parents=True,exist_ok=True); rep=clean(a.video,a.output,parse_box(a.box),a.mode,a.max_crop); rp=a.report or a.output.with_suffix('.watermark.json'); rp.write_text(json.dumps(rep,ensure_ascii=False,indent=2)); print(json.dumps(rep,ensure_ascii=False))
 if __name__=='__main__': main()
+
+
+def clean_boxes(src:Path,dst:Path,boxes,method='delogo'):
+    """Explicitly selected watermark areas; delogo interpolates surrounding pixels.
+    The output is a repair, not a reconstruction of hidden source artwork.
+    """
+    W,H=probe(Path(src)); validated=[]
+    for item in boxes:
+        x,y,w,h=parse_box(item) if isinstance(item,str) else item
+        x,y,w,h=map(int,(x,y,w,h))
+        if min(x,y)<0 or w<2 or h<2 or x+w>W or y+h>H:
+            raise ValueError(f'Invalid watermark box {(x,y,w,h)} for {W}x{H}')
+        if w*h>W*H*.12:
+            raise ValueError('Watermark box too large (>12% of frame); choose a smaller region')
+        validated.append((x,y,w,h))
+    if not validated: raise ValueError('No boxes provided')
+    if Path(src).resolve()==Path(dst).resolve(): raise ValueError('Source and destination differ')
+    filters=','.join(f'delogo=x={x}:y={y}:w={w}:h={h}:show=0' for x,y,w,h in validated)
+    Path(dst).parent.mkdir(parents=True,exist_ok=True)
+    subprocess.run(['ffmpeg','-y','-hide_banner','-loglevel','error','-i',str(src),'-vf',filters,'-c:v','libx264','-preset','veryfast','-crf','18','-c:a','copy',str(dst)],check=True)
+    return {'applied':True,'method':'delogo','boxes':validated,'warning':'interpolated pixels; review the repaired areas'}
